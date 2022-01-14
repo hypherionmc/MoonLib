@@ -64,7 +64,21 @@ publishing {
 
     repositories {
         maven {
-            url "file://" + System.getenv("local_maven")
+            url "https://maven.firstdarkdev.xyz/" + project.release == true ? "releases" : "snapshots"
+            credentials {
+                username System.getenv('MAVEN_USER')
+                password System.getenv('MAVEN_PASS')
+            }
         }
     }
 }
+
+task delDevJar {
+    doLast {
+        def tree = fileTree("build/libs")
+        tree.include '**/*-dev.jar'
+        tree.each { it.delete() }
+    }
+}
+
+build.finalizedBy delDevJar

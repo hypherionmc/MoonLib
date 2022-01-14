@@ -8,9 +8,9 @@ archivesBaseName = "${mod_name}-common-${minecraft_version}"
 
 minecraft {
     version(minecraft_version)
-    runs {   
+    runs {
         if (project.hasProperty('common_runs_enabled') ? project.findProperty('common_runs_enabled').toBoolean() : true) {
-        
+
             server(project.hasProperty('common_server_run_name') ? project.findProperty('common_server_run_name') : 'vanilla_server') {
                 workingDirectory(this.file("run"))
             }
@@ -47,7 +47,11 @@ publishing {
 
     repositories {
         maven {
-            url "file://" + System.getenv("local_maven")
+            url "https://maven.firstdarkdev.xyz/" + project.release == true ? "releases" : "snapshots"
+            credentials {
+                username System.getenv('MAVEN_USER')
+                password System.getenv('MAVEN_PASS')
+            }
         }
     }
 }

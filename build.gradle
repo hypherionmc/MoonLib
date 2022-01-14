@@ -1,11 +1,21 @@
 subprojects {
-    
+
     apply plugin: 'java'
-    
+    version = project.version
+
     java.toolchain.languageVersion = JavaLanguageVersion.of(17)
     java.withSourcesJar()
     java.withJavadocJar()
-        
+
+    ext {
+        release = project.properties['release'] ?: false
+    }
+
+    // Jenkins
+    if (System.getenv('BUILD_NUMBER') != null && project.release == false) {
+        version = version + "." + System.getenv('BUILD_NUMBER') + "d"
+    }
+
     jar {
         manifest {
             attributes([
@@ -22,34 +32,38 @@ subprojects {
             ])
         }
     }
-    
+
+    clean {
+        delete "$rootDir/artifacts"
+    }
+
     repositories {
-
         mavenCentral()
-
         maven {
             name = 'Sponge / Mixin'
             url = 'https://repo.spongepowered.org/repository/maven-public/'
         }
-
         maven {
-            name = 'BlameJared Maven (CrT / Bookshelf)'
-            url = 'https://maven.blamejared.com'
+            name = 'HypherionMC Maven'
+            url = 'https://maven.firstdarkdev.xyz/releases/'
         }
     }
-    
+
 
     tasks.withType(JavaCompile).configureEach {
-    
         it.options.encoding = 'UTF-8'
         it.options.release = 17
     }
 
-    // Disables Gradle's custom module metadata from being published to maven. The
-    // metadata includes mapped dependencies which are not reasonably consumable by
-    // other mod developers.
     tasks.withType(GenerateModuleMetadata) {
-
         enabled = false
     }
+
+    task copyAllArtifacts(type: Copy) {
+        from "$buildDir/libs"
+        into "$rootDir/artifacts"
+        include("*.jar")
+    }
+
+    build.finalizedBy(copyAllArtifacts);
 }
